@@ -1,8 +1,5 @@
 import numpy as np
-
-from Utils import csv, kap, value, selects, firstN, showRule
-from Utils import cosine, many, any
-from Utils import mp as mp
+from Utils import *
 from Row import Row
 from Cols import Cols
 from Discretization import bins
@@ -84,8 +81,8 @@ class Data:
         if not rows:
             rows = self.rows
 
-        rows_numpy = np.array([row.cells for row in rows])
-        kmeans = KMeans(n_clusters=2, random_state=self.the['seed'], n_init="auto").fit(rows_numpy)
+        rows_numpy = numpy_array_convert(rows)
+        kmeans = KMeans(n_clusters=2, random_state=self.the['seed']).fit(rows_numpy)
         left = []
         right = []
         lc = Row(kmeans.cluster_centers_[0])

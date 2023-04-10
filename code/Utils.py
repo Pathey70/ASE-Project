@@ -2,7 +2,7 @@ import math
 from Main import coerce
 import os
 import random
-
+import numpy as np
 from Sym import Sym
 
 
@@ -21,6 +21,17 @@ def rint(lo, hi):
     x, seed = rand(lo, hi)
     return math.floor(0.5 + x)
 
+def numpy_array_convert(rows):
+    numpy_rows=[]
+    for row in rows :
+        flag=True
+        for cell in row.cells :
+            if isinstance(cell, str) and cell.strip() == '?':
+                flag=False
+                break
+        if flag :
+            numpy_rows.append(row.cells)
+    return np.array(numpy_rows)
 
 def csv(src, fun):
     if not os.path.isfile(src):
