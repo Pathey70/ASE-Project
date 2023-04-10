@@ -199,8 +199,8 @@ class Data:
         return rule,most
 
     def betters(self,n):
-        sorted_rows = list(sorted(self.rows, key=functools.cmp_to_key(self.better)))
-        return n and sorted_rows[:n], sorted_rows[n+1:] or sorted_rows
+        sorted_rows = list(sorted(self.rows, key=functools.cmp_to_key(lambda x, y: -1 if self.better(x, y) else 1)))
+        return sorted_rows[1:n], sorted_rows[n+1:] if n is not None else sorted_rows
 
 
 

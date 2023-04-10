@@ -184,6 +184,49 @@ def eg_xpln(the):
     top = data.clone(top)
     print("sort with ",len(data.rows),"evals",top.stats(2, top.cols.y),top.stats(2, top.cols.y,"div"))
 
+def eg_sway1(the):
+    ans = defaultdict(int)
+    ans2 = defaultdict(int)
+    for i in range(0,20):
+        print('*********')
+        the['seed'] = 937162211 - i*100
+        data = Data(the["file"], the)
+        best, rest, _ = data.sway()
+        #print("\nall ", data.stats(2, data.cols.y))
+        # x = data.stats(2, best.cols.y)
+        # print("sway1", x)
+        # print("all ~= sway1?", diffs(best.cols.y, data.cols.y, the))
+        # print("all ~= all?", diffs(data.cols.y, data.cols.y, the))
+        try:
+            rule,most= data.xpln(best,rest)
+        except:
+            continue
+
+        data1= data.clone([i for i in selects(rule,data.rows) if i!=None])
+        x = data1.stats(2, data1.cols.y)
+        print("xpln1", x)
+        for k in x:
+            ans[k] = ans[k] + x[k]
+
+        top2, _ = data.betters(len(best.rows))
+        data2 = data.clone(top2)
+        x2 = data2.stats(2, data2.cols.y)
+        print("top", x2)
+        for k in x2:
+            ans2[k] = ans2[k] + x2[k]
+        try:
+            print("xpln ~= sway1?", diffs(best.cols.y, data1.cols.y, the))
+            print("top ~= sway1?", diffs(data2.cols.y, best.cols.y, the))
+        except:
+            pass
+
+    for k in ans:
+        ans[k] = round(ans[k]/20,2)
+    for k in ans2:
+        ans2[k] = round(ans2[k]/20,2)
+    print("xpln1",dict(ans))
+    print("top",dict(ans2))
+
 
 
 
