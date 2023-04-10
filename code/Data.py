@@ -1,3 +1,5 @@
+import numpy as np
+
 from Utils import csv, kap, value, selects, firstN, showRule
 from Utils import cosine, many, any
 from Utils import mp as mp
@@ -6,6 +8,7 @@ from Cols import Cols
 from Discretization import bins
 import math
 import functools
+from sklearn.cluster import KMeans
 
 
 class Data:
@@ -77,6 +80,39 @@ class Data:
 
         return sorted(list(map(fun, rows)), key=lambda x: x['dist'])
 
+    def half_kmeans(self, rows=None, cols=None, above=None):
+        if not rows:
+            rows = self.rows
+
+        rows_numpy = np.array([row.cells for row in rows])
+        kmeans = KMeans(n_clusters=2, random_state=self.the['seed'], n_init="auto").fit(rows_numpy)
+        left = []
+        right = []
+        lc = Row(kmeans.cluster_centers_[0])
+        rc = Row(kmeans.cluster_centers_[1])
+        left_min = math.inf
+        right_min = math.inf
+        A = None
+        B = None
+
+        def calc_min(center, row, A):
+            if not A:
+                A = row
+            if self.dist(A, center) > self.dist(A, row):
+                return row
+            else:
+                return A
+
+        for idx, label in enumerate(kmeans.labels_):
+            if label == 0:
+                A = calc_min(lc, rows[idx], A)
+                left.append(rows[idx])
+            else:
+                B = calc_min(rc, rows[idx], B)
+                right.append(rows[idx])
+
+        return left, right, A, B
+
     def half(self, rows=None, cols=None, above=None):
         def gap(r1, r2):
             return self.dist(r1, r2, cols)
@@ -108,10 +144,28 @@ class Data:
             else:
                 right.append(tmp["row"])
         if self.the['Reuse'] and above:
-            evals=1
+            evals = 1
         else:
-            evals=2
+            evals = 2
+        # print(A)
+        # print(type(A))
+        # print(B)
+        # print(type(B))
         return left, right, A, B, mid, c, evals
+
+    def sway_kmeans(self, cols=None):
+        def worker(rows, worse):
+            if len(rows) <= len(self.rows) ** self.the["min"]:
+                return rows, many(worse, self.the['rest'] * len(rows))
+            l, r, A, B = self.half_kmeans(rows, cols)
+            if self.better(B, A):
+                l, r, A, B = r, l, B, A
+            for x in r:
+                worse.append(x)
+            return worker(l, worse)
+
+        best, rest = worker(self.rows, [])
+        return self.clone(best), self.clone(rest)
 
     def sway(self, cols=None):
         # if not rows:
@@ -135,10 +189,10 @@ class Data:
                 l, r, A, B = r, l, B, A
             for x in r:
                 worse.append(x)
-            return worker(l, worse, evals+evals0,A)
+            return worker(l, worse, evals + evals0, A)
 
         best, rest, evals = worker(self.rows, [], 0)
-        return self.clone(best), self.clone(rest),evals
+        return self.clone(best), self.clone(rest), evals
 
     def tree(self, rows=None, min=None, cols=None, above=None):
         if not rows:
@@ -156,57 +210,50 @@ class Data:
 
         return node
 
-    def prune(self,rule,max_size):
-        n=0
-        for txt,r in rule.items():
-            n=n+1
+    def prune(self, rule, max_size):
+        n = 0
+        for txt, r in rule.items():
+            n = n + 1
             if len(r) == max_size[txt]:
-                n=n+1
+                n = n + 1
                 rule[txt] = None
-        if n>0:
+        if n > 0:
             return rule
 
-    def RULE(self,ranges,max_size):
-        t={}
+    def RULE(self, ranges, max_size):
+        t = {}
         for r in ranges:
             if r.txt not in t:
                 t[r.txt] = []
-            t[r.txt].append({'lo':r.lo,'hi':r.hi,'at':r.at})
-        return self.prune(t,max_size)
+            t[r.txt].append({'lo': r.lo, 'hi': r.hi, 'at': r.at})
+        return self.prune(t, max_size)
 
-    def xpln(self,best,rest):
+    def xpln(self, best, rest):
         tmp = []
-        max_size={}
+        max_size = {}
+
         def v(has):
-            return value(has,len(best.rows),len(rest.rows),"best")
+            return value(has, len(best.rows), len(rest.rows), "best")
+
         def score(ranges):
-            rule = self.RULE(ranges,max_size)
+            rule = self.RULE(ranges, max_size)
             if rule:
                 print(showRule(rule))
-                bestr = selects(rule,best.rows)
-                restr = selects(rule,rest.rows)
-                if len(bestr) +len(restr) > 0:
-                    return v({'best':len(bestr),'rest':len(restr)}),rule
+                bestr = selects(rule, best.rows)
+                restr = selects(rule, rest.rows)
+                if len(bestr) + len(restr) > 0:
+                    return v({'best': len(bestr), 'rest': len(restr)}), rule
 
-        for ranges in bins(self.cols.x,{'best':best.rows, 'rest':rest.rows},self.the):
+        for ranges in bins(self.cols.x, {'best': best.rows, 'rest': rest.rows}, self.the):
             max_size[ranges[1].txt] = len(ranges)
             print()
             for r in ranges:
                 print(r.txt, r.lo, r.hi)
                 val = v(r.y.has)
-                tmp.append({'range':r, 'max':len(ranges),'val':val})
-        rule,most=firstN(sorted(tmp,key=lambda x:x['val'],reverse=True),score)
-        return rule,most
+                tmp.append({'range': r, 'max': len(ranges), 'val': val})
+        rule, most = firstN(sorted(tmp, key=lambda x: x['val'], reverse=True), score)
+        return rule, most
 
-    def betters(self,n):
+    def betters(self, n):
         sorted_rows = list(sorted(self.rows, key=functools.cmp_to_key(lambda x, y: -1 if self.better(x, y) else 1)))
-        return sorted_rows[1:n], sorted_rows[n+1:] if n is not None else sorted_rows
-
-
-
-
-
-
-
-
-
+        return sorted_rows[1:n], sorted_rows[n + 1:] if n is not None else sorted_rows
