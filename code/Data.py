@@ -1,11 +1,11 @@
-import numpy as np
 from Utils import *
 from Row import Row
 from Cols import Cols
 from Discretization import bins
 import math
 import functools
-from sklearn.cluster import KMeans
+import random
+from sklearn.cluster import KMeans, AgglomerativeClustering
 
 
 class Data:
@@ -66,6 +66,17 @@ class Data:
             s2 = s2 - math.exp(col.w * (y - x) / len(ys))
         return s1 / len(ys) < s2 / len(ys)
 
+    def better_multiple(self, rows1, rows2, s1=0, s2=0, ys=None, x=0, y=0):
+        if not ys:
+            ys = self.cols.y
+        for col in ys:
+            for row1, row2 in zip(rows1, rows2):
+                x = col.norm(row1.cells[col.at])
+                y = col.norm(row2.cells[col.at])
+                s1 = s1 - math.exp(col.w * (x - y) / len(ys))
+                s2 = s2 - math.exp(col.w * (y - x) / len(ys))
+        return s1 / len(ys) < s2 / len(ys)
+
     def around(self, row1, rows=None, cols=None):
         if not rows:
             rows = self.rows
@@ -77,18 +88,31 @@ class Data:
 
         return sorted(list(map(fun, rows)), key=lambda x: x['dist'])
 
+    def half_agglo(self, rows=None, cols=None):
+        if not rows:
+            rows = self.rows
+
+        rows_numpy = numpy_array_convert(rows)
+        agg = AgglomerativeClustering(n_clusters=2, metric='cosine', linkage='average').fit(rows_numpy)
+        left = []
+        right = []
+        for idx, label in enumerate(agg.labels_):
+            if label == 0:
+                left.append(rows[idx])
+            else:
+                right.append(rows[idx])
+        return left, right, random.choices(left, k=10), random.choices(right, k=10)
+
     def half_kmeans(self, rows=None, cols=None, above=None):
         if not rows:
             rows = self.rows
 
         rows_numpy = numpy_array_convert(rows)
-        kmeans = KMeans(n_clusters=2, random_state=self.the['seed']).fit(rows_numpy)
+        kmeans = KMeans(n_clusters=2, random_state=self.the['seed'], n_init=10).fit(rows_numpy)
         left = []
         right = []
         lc = Row(kmeans.cluster_centers_[0])
         rc = Row(kmeans.cluster_centers_[1])
-        left_min = math.inf
-        right_min = math.inf
         A = None
         B = None
 
@@ -156,6 +180,20 @@ class Data:
                 return rows, many(worse, self.the['rest'] * len(rows))
             l, r, A, B = self.half_kmeans(rows, cols)
             if self.better(B, A):
+                l, r, A, B = r, l, B, A
+            for x in r:
+                worse.append(x)
+            return worker(l, worse)
+
+        best, rest = worker(self.rows, [])
+        return self.clone(best), self.clone(rest)
+
+    def sway_agglo(self, cols=None):
+        def worker(rows, worse):
+            if len(rows) <= len(self.rows) ** self.the["min"]:
+                return rows, many(worse, self.the['rest'] * len(rows))
+            l, r, A, B = self.half_agglo(rows, cols)
+            if self.better_multiple(B, A):
                 l, r, A, B = r, l, B, A
             for x in r:
                 worse.append(x)
