@@ -21,8 +21,9 @@ def rint(lo, hi):
     x, seed = rand(lo, hi)
     return math.floor(0.5 + x)
 
-def numpy_array_convert(rows):
-    numpy_rows=[]
+def row_cleaning(rows):
+    #numpy_rows=[]
+    cleaned_rows=[]
     for row in rows :
         flag=True
         for cell in row.cells :
@@ -30,8 +31,9 @@ def numpy_array_convert(rows):
                 flag=False
                 break
         if flag :
-            numpy_rows.append(row.cells)
-    return np.array(numpy_rows)
+            #numpy_rows.append(row.cells)
+            cleaned_rows.append(row)
+    return cleaned_rows
 
 def csv(src, fun):
     if not os.path.isfile(src):
