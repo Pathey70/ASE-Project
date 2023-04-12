@@ -21,19 +21,19 @@ def rint(lo, hi):
     x, seed = rand(lo, hi)
     return math.floor(0.5 + x)
 
+
 def row_cleaning(rows):
-    #numpy_rows=[]
-    cleaned_rows=[]
-    for row in rows :
-        flag=True
-        for cell in row.cells :
+    cleaned_rows = []
+    for row in rows:
+        flag = True
+        for cell in row.cells:
             if isinstance(cell, str) and cell.strip() == '?':
-                flag=False
+                flag = False
                 break
-        if flag :
-            #numpy_rows.append(row.cells)
+        if flag:
             cleaned_rows.append(row)
     return cleaned_rows
+
 
 def csv(src, fun):
     if not os.path.isfile(src):
@@ -63,6 +63,7 @@ def kap(t, fun, u={}):
             u[k] = v
     return u
 
+
 def kap1(t, fun, u={}):
     u = {}
     for k, v in t.items():
@@ -72,6 +73,7 @@ def kap1(t, fun, u={}):
         else:
             u[k] = v
     return u
+
 
 def cosine(a, b, c):
     if c == 0:
@@ -165,7 +167,7 @@ def showRule(rule, merge=None, merges=None, pretty=None):
         j = 1
         t = []
         while j <= len(t0):
-            left = t0[j-1]
+            left = t0[j - 1]
             right = None if j == len(t0) else t0[j]
             if right and left['hi'] == right['lo']:
                 left['hi'] = right['hi']
@@ -176,15 +178,17 @@ def showRule(rule, merge=None, merges=None, pretty=None):
 
     def merges(attr, ranges):
         temp = merge(sorted(ranges, key=lambda x: x['lo']))
-        #print(temp)
-        return list(map(pretty,temp)), attr
+        # print(temp)
+        return list(map(pretty, temp)), attr
 
     return kap1(rule, merges)
 
 
 def firstN(sortedRanges, scoreFun):
     def print_range(r):
-        print(r['range'].txt, r['range'].lo, r['range'].hi, rnd(r['val']), dict(r['range'].y.has))  # rnd(r.val) missing, Range has no val, maybe requires some change
+        print(r['range'].txt, r['range'].lo, r['range'].hi, rnd(r['val']),
+              dict(r['range'].y.has))  # rnd(r.val) missing, Range has no val, maybe requires some change
+
     print()
     mp(sortedRanges, print_range)
     first = sortedRanges[0]['val']
@@ -195,9 +199,9 @@ def firstN(sortedRanges, scoreFun):
             return rng
 
     sortedRanges = list(map(useful, sortedRanges))
-    most, out = -1,-1
-    sortedRanges = [i for i in sortedRanges if i!=None]
-    for n in range(1,len(sortedRanges)+1):
+    most, out = -1, -1
+    sortedRanges = [i for i in sortedRanges if i != None]
+    for n in range(1, len(sortedRanges) + 1):
         tmp, rule = scoreFun([i['range'] for i in sortedRanges[:n]])
         if tmp and tmp > most:
             out, most = rule, tmp
@@ -209,7 +213,7 @@ def selects(rule, rows):
         for rng in ranges:
             lo, hi, at = rng['lo'], rng['hi'], rng['at']
             x = row.cells[at]  # Might need a change to row.cells[at]
-            if x == '?' or (lo == hi and lo == x) or (lo <= x and x< hi):
+            if x == '?' or (lo == hi and lo == x) or (lo <= x and x < hi):
                 return True
         return False
 

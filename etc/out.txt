@@ -1,1 +1,3 @@
+✅PASS : eg_sway
 ✅PASS : eg_sway1
+✅PASS : eg_syms

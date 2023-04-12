@@ -6,6 +6,7 @@ import math
 import functools
 import random
 from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.decomposition import PCA
 
 
 class Data:
@@ -15,6 +16,7 @@ class Data:
         self.rows = list()
         self.cols = None
         self.the = the
+        random.seed(self.the['seed'])
         if type(src) == str:
             csv(src, self.add)
         else:
@@ -92,7 +94,7 @@ class Data:
         if not rows:
             rows = self.rows
 
-        rows_numpy = numpy_array_convert(rows)
+        rows_numpy = np.array([r.cells for r in rows])
         agg = AgglomerativeClustering(n_clusters=2, metric='cosine', linkage='average').fit(rows_numpy)
         left = []
         right = []
@@ -103,11 +105,23 @@ class Data:
                 right.append(rows[idx])
         return left, right, random.choices(left, k=10), random.choices(right, k=10)
 
+    def half_variance(self, rows=None, cols=None, above=None):
+        if not rows:
+            rows = self.rows
+
+        rows_numpy = np.array([r.cells for r in rows])
+        pca = PCA(n_components=1)
+        rows_transformed = pca.fit_transform(rows_numpy)
+        result = [i[1] for i in sorted(enumerate(rows), key=lambda x: rows_transformed[x[0]])]
+        left = result[:len(result)//2]
+        right = result[len(result)//2:]
+        return left, right, random.choices(left, k=10), random.choices(right, k=10)
+
     def half_kmeans(self, rows=None, cols=None, above=None):
         if not rows:
             rows = self.rows
 
-        rows_numpy = numpy_array_convert(rows)
+        rows_numpy = np.array([r.cells for r in rows])
         kmeans = KMeans(n_clusters=2, random_state=self.the['seed'], n_init=10).fit(rows_numpy)
         left = []
         right = []
@@ -185,7 +199,8 @@ class Data:
                 worse.append(x)
             return worker(l, worse)
 
-        best, rest = worker(self.rows, [])
+        rows = row_cleaning(self.rows)
+        best, rest = worker(rows, [])
         return self.clone(best), self.clone(rest)
 
     def sway_agglo(self, cols=None):
@@ -199,23 +214,26 @@ class Data:
                 worse.append(x)
             return worker(l, worse)
 
-        best, rest = worker(self.rows, [])
+        rows = row_cleaning(self.rows)
+        best, rest = worker(rows, [])
+        return self.clone(best), self.clone(rest)
+
+    def sway_pca(self, cols=None):
+        def worker(rows, worse):
+            if len(rows) <= len(self.rows) ** self.the["min"]:
+                return rows, many(worse, self.the['rest'] * len(rows))
+            l, r, A, B = self.half_variance(rows, cols)
+            if self.better_multiple(B, A):
+                l, r, A, B = r, l, B, A
+            for x in r:
+                worse.append(x)
+            return worker(l, worse)
+
+        rows = row_cleaning(self.rows)
+        best, rest = worker(rows, [])
         return self.clone(best), self.clone(rest)
 
     def sway(self, cols=None):
-        # if not rows:
-        #     rows = self.rows
-        # if not min:
-        #     min = len(rows) ** self.the["min"]
-        # if not cols:
-        #     cols = self.cols.x
-        # node = {"data": self.clone(rows)}
-        # if len(rows) > 2 * min:
-        #     left, right, node["A"], node["B"], node["mid"], _ = self.half(rows, cols, above)
-        #     if self.better(node["B"], node["A"]):
-        #         left, right, node["A"], node["B"] = right, left, node["B"], node["A"]
-        #     node["left"] = self.sway(left, min, cols, node["A"])
-        # return node
         def worker(rows, worse, evals0, above=None):
             if len(rows) <= len(self.rows) ** self.the["min"]:
                 return rows, many(worse, self.the['rest'] * len(rows)), evals0
