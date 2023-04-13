@@ -5,7 +5,7 @@ from Discretization import bins
 import math
 import functools
 import random
-from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import KMeans, AgglomerativeClustering, SpectralClustering
 from sklearn.decomposition import PCA
 
 
@@ -95,7 +95,7 @@ class Data:
             rows = self.rows
 
         rows_numpy = np.array([r.cells for r in rows])
-        agg = AgglomerativeClustering(n_clusters=2, metric='cosine', linkage='average').fit(rows_numpy)
+        agg = AgglomerativeClustering(n_clusters=2, metric='euclidean', linkage='ward').fit(rows_numpy)
         left = []
         right = []
         for idx, label in enumerate(agg.labels_):
@@ -104,6 +104,21 @@ class Data:
             else:
                 right.append(rows[idx])
         return left, right, random.choices(left, k=10), random.choices(right, k=10)
+
+    def half_spectral(self, rows=None, cols=None):
+        if not rows:
+            rows = self.rows
+
+        rows_numpy = np.array([r.cells for r in rows])
+        spec = SpectralClustering(n_clusters=2, affinity='nearest_neighbors', n_jobs=10, random_state=self.the['seed']).fit(rows_numpy)
+        left = []
+        right = []
+        for idx, label in enumerate(spec.labels_):
+            if label == 0:
+                left.append(rows[idx])
+            else:
+                right.append(rows[idx])
+        return left, right, random.choices(left, k=10) if len(left) > 10 else left, random.choices(right, k=10) if len(right) > 10 else right
 
     def half_variance(self, rows=None, cols=None, above=None):
         if not rows:
@@ -208,6 +223,21 @@ class Data:
             if len(rows) <= len(self.rows) ** self.the["min"]:
                 return rows, many(worse, self.the['rest'] * len(rows))
             l, r, A, B = self.half_agglo(rows, cols)
+            if self.better_multiple(B, A):
+                l, r, A, B = r, l, B, A
+            for x in r:
+                worse.append(x)
+            return worker(l, worse)
+
+        rows = row_cleaning(self.rows)
+        best, rest = worker(rows, [])
+        return self.clone(best), self.clone(rest)
+
+    def sway_spectral(self, cols=None):
+        def worker(rows, worse):
+            if len(rows) <= len(self.rows) ** self.the["min"]:
+                return rows, many(worse, self.the['rest'] * len(rows))
+            l, r, A, B = self.half_spectral(rows, cols)
             if self.better_multiple(B, A):
                 l, r, A, B = r, l, B, A
             for x in r:
