@@ -67,9 +67,12 @@ def bins(cols, rowss, the):
             for row in rows:
                 x = row.cells[col.at]        # Problem, Row.cells is a list, cannot unpack 2 things, problem with Data and Row
                 if x != '?':
+                    # print("x", x)
                     k = int(bin(col, x, the))
+                    # print("k", k)
                     if k not in ranges:
                         ranges[k] = Range(col.at, col.txt, x)
+                    # print(ranges[k].txt, ranges[k].lo, ranges[k].hi)
                     extend(ranges[k], x, y, the)
         ranges = dict(sorted(ranges.items(), key=lambda r: r[1].lo)).values()
         ranges = list(ranges)

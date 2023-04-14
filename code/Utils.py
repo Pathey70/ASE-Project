@@ -4,6 +4,7 @@ import os
 import random
 import numpy as np
 from Sym import Sym
+from itertools import combinations
 
 
 def rnd(n, nPlaces=2):
@@ -195,30 +196,42 @@ def firstN(sortedRanges, scoreFun):
     print()
 
     def useful(rng):
-        if rng['val'] > 0.05 and rng['val'] > first / 10:  # Won't work, not sure about the val attribute of Range
+        if rng['val'] > 0.05 and rng['val'] > first / 2:
             return rng
 
     sortedRanges = list(map(useful, sortedRanges))
     most, out = -1, -1
     sortedRanges = [i for i in sortedRanges if i != None]
+    arr = [i['range'] for i in sortedRanges]
+    for n in range(1, len(sortedRanges)+1):
+        comb = list(combinations(arr, n))
+        for c in comb:
+            tmp, rule = scoreFun(c)
+            if tmp and tmp > most:
+                out, most = rule, tmp
+
+    print("out1 and most1", out, most)
+    most, out = -1, -1
     for n in range(1, len(sortedRanges) + 1):
         tmp, rule = scoreFun([i['range'] for i in sortedRanges[:n]])
         if tmp and tmp > most:
             out, most = rule, tmp
+    print("out2 and most2", out, most)
     return out, most
 
 
 def selects(rule, rows):
     def disjunction(ranges, row):
-        for rng in ranges:
-            lo, hi, at = rng['lo'], rng['hi'], rng['at']
-            x = row.cells[at]  # Might need a change to row.cells[at]
-            if x == '?' or (lo == hi and lo == x) or (lo <= x and x < hi):
-                return True
+        if ranges:
+            for rng in ranges:
+                lo, hi, at = rng['lo'], rng['hi'], rng['at']
+                x = row.cells[at]  # Might need a change to row.cells[at]
+                if x == '?' or (lo == hi and lo == x) or (lo <= x and x < hi):
+                    return True
         return False
 
     def conjunction(row):
-        for ranges in rule.values():
+        for _,ranges in rule.items():
             if not disjunction(ranges, row):
                 return False
         return True

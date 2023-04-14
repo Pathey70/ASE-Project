@@ -161,60 +161,82 @@ def eg_sway(the):
 #     print(d)
 #
 #
-# def eg_bins(the):
-#     b4=""
-#     data = Data(the['file'], the)
-#     best, rest, _ = data.sway()
-#     print("all\t\t\tbest:{}, rest:{}".format(len(best.rows), len(rest.rows)))
-#     for k, t in enumerate(bins(data.cols.x, {"best": best.rows, "rest": rest.rows}, the)):
-#         for rng in t:
-#             if rng.txt != b4:
-#                 print("")
-#             b4=rng.txt
-#             print(rng.txt, rng.lo, rng.hi, rnd(value(rng.y.has, len(best.rows), len(rest.rows), "best")), dict(rng.y.has))
-#
-# def eg_xpln(the):
-#     data = Data(the['file'], the)
-#     best, rest, evals = data.sway()
-#     rule,most= data.xpln(best,rest)
-#     print("\n-----------\nexplain=", showRule(rule))
-#     data1= data.clone([i for i in selects(rule,data.rows) if i!=None])
-#     print("all               ",data.stats(2, best.cols.y),data.stats(2, best.cols.y,'div'))
-#     print("sway with ",evals,"evals",best.stats(2, best.cols.y),best.stats(2, best.cols.y,"div"))
-#     print("xpln with ",evals,"evals",data1.stats(2, data1.cols.y),data1.stats(2, data1.cols.y,"div"))
-#     top,_ = data.betters(len(best.rows))
-#     top = data.clone(top)
-#     print("sort with ",len(data.rows),"evals",top.stats(2, top.cols.y),top.stats(2, top.cols.y,"div"))
+def eg_bins(the):
+    b4 = ""
+    data = Data(the['file'], the)
+    best, rest, _ = data.sway()
+    print("all\t\t\tbest:{}, rest:{}".format(len(best.rows), len(rest.rows)))
+    for k, t in enumerate(bins(data.cols.x, {"best": best.rows, "rest": rest.rows}, the)):
+        for rng in t:
+            if rng.txt != b4:
+                print("")
+            b4 = rng.txt
+            print(rng.txt, rng.lo, rng.hi, rnd(value(rng.y.has, len(best.rows), len(rest.rows), "best")),
+                  dict(rng.y.has))
+
+
+def eg_xpln(the):
+    for i in range(20):
+        print('*********')
+        the['seed'] = 937162211 - i * 100
+        data = Data(the['file'], the)
+        best, rest, evals = data.sway()
+        rule, most = data.xpln(best, rest)
+        print("\n-----------\nexplain=", showRule(rule))
+        data1 = data.clone([i for i in selects(rule, data.rows) if i != None])
+        print("all               ", data.stats(2, best.cols.y), data.stats(2, best.cols.y, 'div'))
+        print("sway with ", evals, "evals", best.stats(2, best.cols.y), best.stats(2, best.cols.y, "div"))
+        print("xpln with ", evals, "evals", data1.stats(2, data1.cols.y), data1.stats(2, data1.cols.y, "div"))
+        top, _ = data.betters(len(best.rows))
+        top = data.clone(top)
+        print("sort with ", len(data.rows), "evals", top.stats(2, top.cols.y), top.stats(2, top.cols.y, "div"))
+
 
 def eg_sway1(the):
     ans = defaultdict(int)
+    ans1 = defaultdict(int)
     ans2 = defaultdict(int)
+    ans3 = defaultdict(int)
+    ans4 = defaultdict(int)
     for i in range(0, 20):
         print('*********')
         the['seed'] = 937162211 - i * 100
         data = Data(the["file"], the)
         data1 = Data(the["file"], the)
         data2 = Data(the["file"], the)
+        data3 = Data(the["file"], the)
+        data4 = Data(the["file"], the)
         best, rest, _ = data.sway()
-        best1, rest1 = data.sway_kmeans()
-        best2, rest2 = data.sway_agglo()
-        best3, rest3 = data.sway_pca()
-        best4, rest4 = data.sway_spectral()
+        best1, rest1 = data1.sway_kmeans()
+        best2, rest2 = data2.sway_agglo()
+        best3, rest3 = data3.sway_pca()
+        best4, rest4 = data4.sway_spectral()
         print("\nall ", data.stats(2, data.cols.y))
         x = data.stats(2, best.cols.y)
         print("sway1", x)
         x1 = data1.stats(2, best1.cols.y)
-        print("sway2", x1)
+        print("sway2_kmeans", x1)
         x2 = data2.stats(2, best2.cols.y)
-        print("sway3", x2)
-        x3 = data2.stats(2, best3.cols.y)
-        print("sway4", x3)
-        x4 = data2.stats(2, best4.cols.y)
-        print("sway5", x4)
+        print("sway3_agglo", x2)
+        x3 = data3.stats(2, best3.cols.y)
+        print("sway4_pca", x3)
+        x4 = data4.stats(2, best4.cols.y)
+        print("sway5_spectral", x4)
         print("all ~= sway1?", diffs(best.cols.y, data.cols.y, the))
         print("sway2 ~= sway1?", diffs(best.cols.y, best1.cols.y, the))
         # print("sway3 ~= sway1?", diffs(best.cols.y, best2.cols.y, the))
         print("all ~= all?", diffs(data.cols.y, data.cols.y, the))
+        for k in x:
+            ans[k] = ans[k] + x[k]
+        for k in x1:
+            ans1[k] = ans1[k] + x1[k]
+        for k in x2:
+            ans2[k] = ans2[k] + x2[k]
+        for k in x3:
+            ans3[k] = ans3[k] + x3[k]
+        for k in x4:
+            ans4[k] = ans4[k] + x4[k]
+
     #     try:
     #         rule,most= data.xpln(best,rest)
     #     except:
@@ -238,9 +260,21 @@ def eg_sway1(the):
     #     except:
     #         pass
     #
-    # for k in ans:
-    #     ans[k] = round(ans[k]/20,2)
-    # for k in ans2:
-    #     ans2[k] = round(ans2[k]/20,2)
-    # print("xpln1",dict(ans))
-    # print("top",dict(ans2))
+    for k in ans:
+        ans[k] = round(ans[k] / 20, 2)
+    for k in ans1:
+        ans1[k] = round(ans1[k] / 20, 2)
+    for k in ans2:
+        ans2[k] = round(ans2[k] / 20, 2)
+    for k in ans3:
+        ans3[k] = round(ans3[k] / 20, 2)
+    for k in ans4:
+        ans4[k] = round(ans4[k] / 20, 2)
+    print()
+    print('Mean')
+    print()
+    print("sway1", dict(ans))
+    print("sway2_kmeans", dict(ans1))
+    print("sway3_agglo", dict(ans2))
+    print("sway4_pca", dict(ans3))
+    print("sway5_spectral", dict(ans4))

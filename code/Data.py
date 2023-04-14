@@ -197,10 +197,6 @@ class Data:
             evals = 1
         else:
             evals = 2
-        # print(A)
-        # print(type(A))
-        # print(B)
-        # print(type(B))
         return left, right, A, B, mid, c, evals
 
     def sway_kmeans(self, cols=None):
@@ -321,7 +317,7 @@ class Data:
         def score(ranges):
             rule = self.RULE(ranges, max_size)
             if rule:
-                print(showRule(rule))
+                # print(showRule(rule))
                 bestr = selects(rule, best.rows)
                 restr = selects(rule, rest.rows)
                 if len(bestr) + len(restr) > 0:
