@@ -325,9 +325,9 @@ class Data:
 
         for ranges in bins(self.cols.x, {'best': best.rows, 'rest': rest.rows}, self.the):
             max_size[ranges[1].txt] = len(ranges)
-            print()
+            #print()
             for r in ranges:
-                print(r.txt, r.lo, r.hi)
+                #print(r.txt, r.lo, r.hi)
                 val = v(r.y.has)
                 tmp.append({'range': r, 'max': len(ranges), 'val': val})
         rule, most = firstN(sorted(tmp, key=lambda x: x['val'], reverse=True), score)
