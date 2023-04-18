@@ -27,6 +27,15 @@ def eg_syms(the):
     assert 1.38 == rnd(sym.div())
 
 
+def eg_csv_stats(the):
+    csv_stats(the['file'])
+    data = Data(the["file"], the)
+    print('---------------------')
+    print("Num rows: ", len(data.rows))
+    print("Num X: ", len(data.cols.x))
+    print("Num Y: ", len(data.cols.y))
+
+
 # def eg_nums(the):
 #     """Tests Num"""
 #     num1 = Num(the)
@@ -180,14 +189,14 @@ def eg_bins(the):
 def eg_xpln(the):
     ans = defaultdict(list)
     ans1 = defaultdict(list)
-    l = [8,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37]
+    l = [8, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37]
     for i in l:
         print('*********')
         the['seed'] = i
         data = Data(the['file'], the)
         best, rest = data.sway_pca()
         rule, most = data.xpln(best, rest)
-        #print("\n-----------\nexplain=", showRule(rule))
+        # print("\n-----------\nexplain=", showRule(rule))
         data1 = data.clone([i for i in selects(rule, data.rows) if i != None])
         x = data.stats(2, best.cols.y)
         print("sway2", x)
@@ -197,26 +206,25 @@ def eg_xpln(the):
             ans[k].append(x[k])
         for k in x2:
             ans1[k].append(x2[k])
-    print("sway2_list",dict(ans))
-    print("xpln2_list",dict(ans1))
+    print("sway2_list", dict(ans))
+    print("xpln2_list", dict(ans1))
     df = pd.DataFrame.from_dict(ans, orient="index")
     df.to_csv("../etc/data_out/coc10000_sway.csv")
     df1 = pd.DataFrame.from_dict(ans1, orient="index")
     df1.to_csv("../etc/data_out/coc10000_xpln.csv")
     for k in ans:
-        ans[k] = round(sum(ans[k])/20,2)
+        ans[k] = round(sum(ans[k]) / 20, 2)
     for k in ans1:
-        ans1[k] = round(sum(ans1[k])/20,2)
+        ans1[k] = round(sum(ans1[k]) / 20, 2)
     print("sway2", dict(ans))
     print("xpln2", dict(ans1))
 
-
-        # print("all               ", data.stats(2, best.cols.y), data.stats(2, best.cols.y, 'div'))
-        # print("sway with ", best.stats(2, best.cols.y), best.stats(2, best.cols.y, "div"))
-        # print("xpln with ", data1.stats(2, data1.cols.y), data1.stats(2, data1.cols.y, "div"))
-        # top, _ = data.betters(len(best.rows))
-        # top = data.clone(top)
-        # print("sort with ", len(data.rows), "evals", top.stats(2, top.cols.y), top.stats(2, top.cols.y, "div"))
+    # print("all               ", data.stats(2, best.cols.y), data.stats(2, best.cols.y, 'div'))
+    # print("sway with ", best.stats(2, best.cols.y), best.stats(2, best.cols.y, "div"))
+    # print("xpln with ", data1.stats(2, data1.cols.y), data1.stats(2, data1.cols.y, "div"))
+    # top, _ = data.betters(len(best.rows))
+    # top = data.clone(top)
+    # print("sort with ", len(data.rows), "evals", top.stats(2, top.cols.y), top.stats(2, top.cols.y, "div"))
 
 
 def eg_sway1(the):
