@@ -5,6 +5,7 @@ import random
 import numpy as np
 from Sym import Sym
 from itertools import combinations
+import pandas as pd
 
 
 def rnd(n, nPlaces=2):
@@ -47,6 +48,10 @@ def csv(src, fun):
                 temp.append(coerce(j))
             fun(temp)
 
+
+def csv_stats(filename):
+    data = pd.read_csv(filename)
+    print(data.describe())
 
 def mp(src, fun):
     for i in src:
@@ -190,10 +195,11 @@ def firstN(sortedRanges, scoreFun):
         print(r['range'].txt, r['range'].lo, r['range'].hi, rnd(r['val']),
               dict(r['range'].y.has))  # rnd(r.val) missing, Range has no val, maybe requires some change
 
-    print()
-    mp(sortedRanges, print_range)
+    # print()
+    # mp(sortedRanges, print_range)
     first = sortedRanges[0]['val']
-    print()
+
+    # print()
 
     def useful(rng):
         if rng['val'] > 0.05 and rng['val'] > first / 2:
@@ -203,20 +209,20 @@ def firstN(sortedRanges, scoreFun):
     most, out = -1, -1
     sortedRanges = [i for i in sortedRanges if i != None]
     arr = [i['range'] for i in sortedRanges]
-    for n in range(1, len(sortedRanges)+1):
+    for n in range(1, len(sortedRanges) + 1):
         comb = list(combinations(arr, n))
         for c in comb:
             tmp, rule = scoreFun(c)
             if tmp and tmp > most:
                 out, most = rule, tmp
 
-    print("out1 and most1", out, most)
-    most, out = -1, -1
-    for n in range(1, len(sortedRanges) + 1):
-        tmp, rule = scoreFun([i['range'] for i in sortedRanges[:n]])
-        if tmp and tmp > most:
-            out, most = rule, tmp
-    print("out2 and most2", out, most)
+    # print("out1 and most1", out, most)
+    # most, out = -1, -1
+    # for n in range(1, len(sortedRanges) + 1):
+    #     tmp, rule = scoreFun([i['range'] for i in sortedRanges[:n]])
+    #     if tmp and tmp > most:
+    #         out, most = rule, tmp
+    # print("out2 and most2", out, most)
     return out, most
 
 
@@ -231,7 +237,7 @@ def selects(rule, rows):
         return False
 
     def conjunction(row):
-        for _,ranges in rule.items():
+        for _, ranges in rule.items():
             if not disjunction(ranges, row):
                 return False
         return True
