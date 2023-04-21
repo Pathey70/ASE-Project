@@ -1,5 +1,6 @@
 # ASE-Project
 
+[![Unit tests](https://github.com/Pathey70/ASE-project/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/Pathey70/ASE-project/actions/workflows/unit-tests.yml) 
 [![DOI](https://zenodo.org/badge/623629272.svg)](https://zenodo.org/badge/latestdoi/623629272)
 
 
